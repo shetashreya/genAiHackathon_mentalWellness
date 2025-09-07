@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import { MoodCheckin } from "@/components/mood-checkin"
 import { MoodHistory } from "@/components/mood-history"
 import { ResourceLibrary } from "@/components/resource-library"
@@ -12,7 +13,23 @@ import { ResourceViewer } from "@/components/resource-viewer"
 import { ProgressDashboard } from "@/components/progress-dashboard"
 import { AchievementNotification } from "@/components/achievement-notification"
 import { StreakCelebration } from "@/components/streak-celebration"
-import { Heart, MessageCircle, BookOpen, Calendar, Sparkles, Trophy, Leaf, Sun } from "lucide-react"
+import {
+  Heart,
+  MessageCircle,
+  BookOpen,
+  Calendar,
+  Sparkles,
+  Trophy,
+  Sun,
+  Droplets,
+  Speech as Stretch,
+  Moon,
+  Target,
+  Smile,
+  Wind,
+  Play,
+  Pause,
+} from "lucide-react"
 import type { WellnessResource } from "@/lib/resources"
 import { type UserProgress, type Achievement, updateProgress, getDefaultProgress } from "@/lib/gamification"
 
@@ -40,6 +57,15 @@ export default function DashboardPage() {
   const [progress, setProgress] = useState<UserProgress>(getDefaultProgress())
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null)
   const [showStreakCelebration, setShowStreakCelebration] = useState(false)
+  const [dailyAffirmation, setDailyAffirmation] = useState("")
+  const [journalingPrompt, setJournalingPrompt] = useState("")
+  const [waterIntake, setWaterIntake] = useState(0)
+  const [showBreathingExercise, setShowBreathingExercise] = useState(false)
+  const [breathingActive, setBreathingActive] = useState(false)
+  const [breathingPhase, setBreathingPhase] = useState("inhale")
+  const [breathingCount, setBreathingCount] = useState(0)
+  const [showSleepRoutine, setShowSleepRoutine] = useState(false)
+  const [currentChallenge, setCurrentChallenge] = useState("")
 
   useEffect(() => {
     // Check if user is onboarded
@@ -66,7 +92,107 @@ export default function DashboardPage() {
     if (savedProgress) {
       setProgress(JSON.parse(savedProgress))
     }
+
+    const savedWaterIntake = localStorage.getItem("mindfulai_water_intake")
+    if (savedWaterIntake) {
+      const waterData = JSON.parse(savedWaterIntake)
+      const today = new Date().toDateString()
+      if (waterData.date === today) {
+        setWaterIntake(waterData.count)
+      }
+    }
+
+    // Generate daily content
+    generateDailyContent()
+
+    // Check if evening for sleep routine
+    const hour = new Date().getHours()
+    setShowSleepRoutine(hour >= 20 || hour <= 6)
   }, [router])
+
+  const generateDailyContent = () => {
+    const affirmations = [
+      "You are capable of amazing things today.",
+      "Your feelings are valid and you deserve kindness.",
+      "Every small step forward is progress worth celebrating.",
+      "You have the strength to handle whatever comes your way.",
+      "Your mental health matters and you're taking great care of yourself.",
+    ]
+
+    const prompts = [
+      "What's one thing you're grateful for right now?",
+      "Describe a moment today when you felt proud of yourself.",
+      "What would you tell a friend who's going through what you're experiencing?",
+      "What's one small thing that brought you joy recently?",
+      "How do you want to feel by the end of today?",
+    ]
+
+    const challenges = [
+      "5-Day Focus Boost: Practice 5 minutes of mindfulness daily",
+      "Gratitude Week: Write down 3 things you're grateful for each day",
+      "Movement Challenge: Take a 10-minute walk daily",
+      "Sleep Better: Follow a consistent bedtime routine for 7 days",
+      "Digital Detox: Spend 30 minutes phone-free before bed",
+    ]
+
+    const today = new Date().toDateString()
+    const savedDate = localStorage.getItem("mindfulai_daily_content_date")
+
+    if (savedDate !== today) {
+      const randomAffirmation = affirmations[Math.floor(Math.random() * affirmations.length)]
+      const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)]
+      const randomChallenge = challenges[Math.floor(Math.random() * challenges.length)]
+
+      setDailyAffirmation(randomAffirmation)
+      setJournalingPrompt(randomPrompt)
+      setCurrentChallenge(randomChallenge)
+
+      localStorage.setItem("mindfulai_daily_content_date", today)
+      localStorage.setItem("mindfulai_daily_affirmation", randomAffirmation)
+      localStorage.setItem("mindfulai_daily_prompt", randomPrompt)
+      localStorage.setItem("mindfulai_current_challenge", randomChallenge)
+    } else {
+      setDailyAffirmation(localStorage.getItem("mindfulai_daily_affirmation") || affirmations[0])
+      setJournalingPrompt(localStorage.getItem("mindfulai_daily_prompt") || prompts[0])
+      setCurrentChallenge(localStorage.getItem("mindfulai_current_challenge") || challenges[0])
+    }
+  }
+
+  const handleWaterIntake = () => {
+    const newCount = waterIntake + 1
+    setWaterIntake(newCount)
+
+    const today = new Date().toDateString()
+    localStorage.setItem(
+      "mindfulai_water_intake",
+      JSON.stringify({
+        date: today,
+        count: newCount,
+      }),
+    )
+  }
+
+  const startBreathingExercise = () => {
+    setBreathingActive(true)
+    setBreathingCount(0)
+    setBreathingPhase("inhale")
+
+    const breathingCycle = () => {
+      setBreathingPhase("inhale")
+      setTimeout(() => setBreathingPhase("hold"), 4000)
+      setTimeout(() => setBreathingPhase("exhale"), 8000)
+      setTimeout(() => {
+        setBreathingCount((prev) => prev + 1)
+        if (breathingCount < 5) {
+          breathingCycle()
+        } else {
+          setBreathingActive(false)
+        }
+      }, 12000)
+    }
+
+    breathingCycle()
+  }
 
   const handleMoodSubmit = (moodData: any) => {
     const newEntry: MoodEntry = {
@@ -178,56 +304,46 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b border-border/30 bg-card/90 backdrop-blur-sm sticky top-0 z-40"
+        className="border-b border-border/30 bg-card/90 backdrop-blur-sm"
       >
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <motion.div
-              className="flex items-center gap-4"
-              whileHover={{ scale: 1.02 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-warm hover-glow">
-                  <Heart className="w-6 h-6 text-background" />
-                </div>
-                <motion.div
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-accent rounded-full flex items-center justify-center"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                >
-                  <Sparkles className="w-2 h-2 text-accent-foreground" />
-                </motion.div>
+        <div className="container mx-auto px-6 py-8">
+          <motion.div
+            className="text-center space-y-4"
+            whileHover={{ scale: 1.01 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-3xl flex items-center justify-center shadow-warm">
+                <Heart className="w-8 h-8 text-background" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-primary font-sans">Welcome back, {user.nickname}!</h1>
-                <div className="flex items-center gap-3 mt-1">
-                  <div className="flex items-center gap-1">
-                    <Trophy className="w-4 h-4 text-secondary" />
-                    <span className="text-sm font-medium text-secondary">Level {progress.level}</span>
-                  </div>
-                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                  <div className="flex items-center gap-1">
-                    <Sun className="w-4 h-4 text-accent" />
-                    <span className="text-sm text-muted-foreground">{progress.currentStreak} day streak</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full shadow-warm bg-card/50 border-primary/20 hover:bg-primary/10 hover-glow"
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatDelay: 3 }}
               >
-                <Leaf className="w-4 h-4 text-primary" />
-              </Button>
-            </motion.div>
-          </div>
+                <Sparkles className="w-6 h-6 text-accent" />
+              </motion.div>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-primary font-sans">
+              Hi {user?.nickname}, how are you feeling today?
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Welcome to your personal wellness space. Take a moment to check in with yourself and explore the tools
+              designed just for you.
+            </p>
+            <div className="flex items-center justify-center gap-6 mt-6">
+              <div className="flex items-center gap-2 bg-card/50 rounded-full px-4 py-2 border border-primary/20">
+                <Trophy className="w-5 h-5 text-secondary" />
+                <span className="text-sm font-medium text-secondary">Level {progress.level}</span>
+              </div>
+              <div className="flex items-center gap-2 bg-card/50 rounded-full px-4 py-2 border border-accent/20">
+                <Sun className="w-5 h-5 text-accent" />
+                <span className="text-sm text-muted-foreground">{progress.currentStreak} day streak</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </motion.header>
 
@@ -268,7 +384,6 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      {/* Content */}
       <main className="container mx-auto px-6 py-8">
         <AnimatePresence mode="wait">
           {activeTab === "overview" && (
@@ -280,84 +395,168 @@ export default function DashboardPage() {
               transition={{ duration: 0.3 }}
               className="space-y-8"
             >
-              {/* Quick Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <motion.div
-                  whileHover={{ scale: 1.02, y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
-                  <Card
-                    className="cursor-pointer shadow-warm hover-glow transition-all duration-300 border-primary/20 bg-gradient-to-br from-card to-muted/30"
-                    onClick={() => setShowMoodCheckin(true)}
-                  >
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-gradient-to-br from-accent to-secondary rounded-2xl flex items-center justify-center shadow-warm">
-                          <Calendar className="w-7 h-7 text-background" />
-                        </div>
-                        <div className="flex-1">
-                          <CardTitle className="text-lg font-bold text-primary">
-                            {hasCheckedInToday ? "Update Check-in" : "Daily Check-in"}
-                          </CardTitle>
-                          <CardDescription className="text-sm text-muted-foreground">
-                            {hasCheckedInToday ? "Update how you're feeling" : "Track your mood today"}
-                          </CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                </motion.div>
+              {/* Top Section: Mood Tracker */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+              >
+                <Card className="shadow-warm hover-glow border-primary/20 bg-gradient-to-br from-card to-muted/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3 text-primary">
+                      <Calendar className="w-6 h-6" />
+                      Daily Mood Check-in
+                    </CardTitle>
+                    <CardDescription>
+                      {hasCheckedInToday ? "Update how you're feeling" : "Track your mood today"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      onClick={() => setShowMoodCheckin(true)}
+                      className="w-full bg-gradient-to-r from-primary to-secondary text-background hover:shadow-warm"
+                      size="lg"
+                    >
+                      {hasCheckedInToday ? "Update Check-in" : "Start Check-in"}
+                    </Button>
+                  </CardContent>
+                </Card>
 
-                <motion.div
-                  whileHover={{ scale: 1.02, y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
+                <Card className="shadow-warm border-accent/20 bg-gradient-to-br from-accent/10 to-secondary/10">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3 text-accent">
+                      <Smile className="w-6 h-6" />
+                      Daily Affirmation
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-lg font-medium text-foreground italic">"{dailyAffirmation}"</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Center Grid: Main Features */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <motion.div whileHover={{ scale: 1.02, y: -4 }}>
                   <Card
-                    className="cursor-pointer shadow-warm hover-glow transition-all duration-300 border-primary/20 bg-gradient-to-br from-card to-muted/30"
+                    className="cursor-pointer shadow-warm hover-glow border-primary/20 bg-gradient-to-br from-card to-muted/30"
                     onClick={() => router.push("/chat")}
                   >
-                    <CardHeader className="pb-4">
+                    <CardHeader>
                       <div className="flex items-center gap-4">
                         <div className="w-14 h-14 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-warm">
                           <MessageCircle className="w-7 h-7 text-background" />
                         </div>
-                        <div className="flex-1">
-                          <CardTitle className="text-lg font-bold text-primary">Chat with AI</CardTitle>
-                          <CardDescription className="text-sm text-muted-foreground">
-                            Talk to your AI companion
-                          </CardDescription>
+                        <div>
+                          <CardTitle className="text-lg text-primary">AI Companion</CardTitle>
+                          <CardDescription>Chat with your supportive AI friend</CardDescription>
                         </div>
                       </div>
                     </CardHeader>
                   </Card>
                 </motion.div>
 
-                <motion.div
-                  whileHover={{ scale: 1.02, y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
-                  <Card
-                    className="cursor-pointer shadow-warm hover-glow transition-all duration-300 border-primary/20 bg-gradient-to-br from-card to-muted/30"
-                    onClick={() => setActiveTab("resources")}
-                  >
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-gradient-to-br from-secondary to-primary rounded-2xl flex items-center justify-center shadow-warm">
-                          <BookOpen className="w-7 h-7 text-background" />
-                        </div>
-                        <div className="flex-1">
-                          <CardTitle className="text-lg font-bold text-primary">Wellness Resources</CardTitle>
-                          <CardDescription className="text-sm text-muted-foreground">
-                            Explore helpful content
-                          </CardDescription>
-                        </div>
+                <Card className="shadow-warm border-secondary/20 bg-gradient-to-br from-secondary/10 to-primary/10">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3 text-secondary">
+                      <BookOpen className="w-6 h-6" />
+                      Journaling Prompt
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-3">{journalingPrompt}</p>
+                    <Button variant="outline" size="sm" className="w-full bg-transparent">
+                      Start Writing
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-warm border-accent/20 bg-gradient-to-br from-accent/10 to-secondary/10">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3 text-accent">
+                      <Wind className="w-6 h-6" />
+                      Quick Stress Relief
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      onClick={() => setShowBreathingExercise(true)}
+                      className="w-full bg-gradient-to-r from-accent to-secondary text-background"
+                    >
+                      Start Breathing Exercise
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Bottom Grid: Wellness Nudges & Growth */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card className="shadow-warm border-blue-400/20 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-base">
+                      <Droplets className="w-5 h-5" />
+                      Water Intake
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">{waterIntake}/8 glasses</span>
+                        <Button onClick={handleWaterIntake} size="sm" variant="outline">
+                          +1
+                        </Button>
                       </div>
+                      <Progress value={(waterIntake / 8) * 100} className="h-2" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-warm border-green-400/20 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400 text-base">
+                      <Stretch className="w-5 h-5" />
+                      Posture Check
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-muted-foreground mb-2">Time for a stretch break?</p>
+                    <Button size="sm" variant="outline" className="w-full bg-transparent">
+                      Stretch Now
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {showSleepRoutine && (
+                  <Card className="shadow-warm border-purple-400/20 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-purple-600 dark:text-purple-400 text-base">
+                        <Moon className="w-5 h-5" />
+                        Sleep Routine
+                      </CardTitle>
                     </CardHeader>
+                    <CardContent>
+                      <p className="text-xs text-muted-foreground mb-2">Ready for bedtime?</p>
+                      <Button size="sm" variant="outline" className="w-full bg-transparent">
+                        Start Routine
+                      </Button>
+                    </CardContent>
                   </Card>
-                </motion.div>
+                )}
+
+                <Card className="shadow-warm border-orange-400/20 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-orange-600 dark:text-orange-400 text-base">
+                      <Target className="w-5 h-5" />
+                      Growth Challenge
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-muted-foreground mb-2">{currentChallenge}</p>
+                    <Button size="sm" variant="outline" className="w-full bg-transparent">
+                      Join Challenge
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Mood Overview */}
@@ -440,6 +639,64 @@ export default function DashboardPage() {
           )}
         </AnimatePresence>
       </main>
+
+      <AnimatePresence>
+        {showBreathingExercise && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowBreathingExercise(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-card rounded-3xl p-8 max-w-md w-full shadow-warm border border-primary/20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center space-y-6">
+                <h3 className="text-2xl font-bold text-primary">Breathing Exercise</h3>
+                <div className="relative">
+                  <motion.div
+                    className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-accent to-secondary flex items-center justify-center"
+                    animate={{
+                      scale: breathingPhase === "inhale" ? 1.2 : breathingPhase === "exhale" ? 0.8 : 1,
+                    }}
+                    transition={{ duration: 4, ease: "easeInOut" }}
+                  >
+                    <Wind className="w-12 h-12 text-background" />
+                  </motion.div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-lg font-medium capitalize text-primary">{breathingPhase}</p>
+                  <p className="text-sm text-muted-foreground">Cycle {breathingCount + 1} of 6</p>
+                </div>
+                <div className="flex gap-3">
+                  {!breathingActive ? (
+                    <Button
+                      onClick={startBreathingExercise}
+                      className="flex-1 bg-gradient-to-r from-primary to-secondary"
+                    >
+                      <Play className="w-4 h-4 mr-2" />
+                      Start
+                    </Button>
+                  ) : (
+                    <Button onClick={() => setBreathingActive(false)} variant="outline" className="flex-1">
+                      <Pause className="w-4 h-4 mr-2" />
+                      Pause
+                    </Button>
+                  )}
+                  <Button onClick={() => setShowBreathingExercise(false)} variant="outline">
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
