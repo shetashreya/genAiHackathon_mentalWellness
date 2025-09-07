@@ -1,14 +1,14 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { CrisisIntervention } from "@/components/crisis-intervention"
-import { Heart, Send } from "lucide-react"
+import { Heart, Send, Sparkles, Bot } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { analyzeCrisisRisk, logCrisisEvent } from "@/lib/crisis-detection"
 
@@ -140,150 +140,197 @@ export function AiChat({ userName }: AiChatProps) {
   }
 
   return (
-    <div className="flex flex-col h-[600px] max-w-4xl mx-auto">
-      {showCrisisAlert && (
-        <div className="mb-4">
-          <CrisisIntervention riskLevel={crisisLevel} onDismiss={() => setShowCrisisAlert(false)} />
-        </div>
-      )}
+    <div className="flex flex-col h-[700px] max-w-4xl mx-auto">
+      <AnimatePresence>
+        {showCrisisAlert && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="mb-4"
+          >
+            <CrisisIntervention riskLevel={crisisLevel} onDismiss={() => setShowCrisisAlert(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Chat Header */}
-      <Card className="flex-1 flex flex-col">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-              <Heart className="w-5 h-5 text-primary" />
+      <Card className="flex-1 flex flex-col shadow-soft border-0 bg-card/80 backdrop-blur-sm">
+        <CardHeader className="pb-4 gradient-primary text-white rounded-t-lg">
+          <motion.div
+            className="flex items-center gap-4"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <div className="relative">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                <Bot className="w-6 h-6 text-white" />
+              </div>
+              <motion.div
+                className="absolute -top-1 -right-1 w-4 h-4 bg-accent rounded-full flex items-center justify-center"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+              >
+                <Sparkles className="w-2 h-2 text-accent-foreground" />
+              </motion.div>
             </div>
             <div>
-              <CardTitle className="text-lg">Your AI Companion</CardTitle>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-muted-foreground">Online and ready to listen</span>
+              <CardTitle className="text-xl font-bold text-white">Your AI Companion</CardTitle>
+              <div className="flex items-center gap-2 mt-1">
+                <motion.div
+                  className="w-2 h-2 bg-green-400 rounded-full"
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                />
+                <span className="text-sm text-white/80">Online and ready to listen</span>
               </div>
             </div>
-          </div>
+          </motion.div>
         </CardHeader>
 
-        {/* Messages */}
-        <CardContent className="flex-1 flex flex-col">
-          <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
-            {messages.map((message) => (
-              <div key={message.id} className={cn("flex", message.sender === "user" ? "justify-end" : "justify-start")}>
-                <div
-                  className={cn(
-                    "max-w-[80%] rounded-lg px-4 py-3",
-                    message.sender === "user" ? "bg-primary text-primary-foreground" : "bg-muted",
-                  )}
+        <CardContent className="flex-1 flex flex-col p-6">
+          <div className="flex-1 overflow-y-auto space-y-4 mb-6 pr-2">
+            <AnimatePresence initial={false}>
+              {messages.map((message, index) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className={cn("flex", message.sender === "user" ? "justify-end" : "justify-start")}
                 >
-                  <p className="text-sm leading-relaxed">{message.content}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs opacity-70">{formatTime(message.timestamp)}</span>
-                    {message.crisisAnalysis && message.crisisAnalysis.riskLevel !== "none" && (
-                      <Badge
-                        variant={
-                          message.crisisAnalysis.riskLevel === "high" || message.crisisAnalysis.riskLevel === "critical"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                        className="text-xs"
-                      >
-                        {message.crisisAnalysis.riskLevel} risk
-                      </Badge>
+                  <div
+                    className={cn(
+                      "flex items-end gap-2 max-w-[80%]",
+                      message.sender === "user" ? "flex-row-reverse" : "flex-row",
                     )}
-                    {message.analysis && message.sender === "ai" && (
-                      <div className="flex gap-1">
-                        {message.analysis.mood !== "neutral" && (
-                          <Badge variant="secondary" className="text-xs">
-                            {message.analysis.mood}
-                          </Badge>
-                        )}
-                        {message.analysis.crisisLevel !== "none" && (
-                          <Badge
-                            variant={
-                              message.analysis.crisisLevel === "high" || message.analysis.crisisLevel === "critical"
-                                ? "destructive"
-                                : "secondary"
-                            }
-                            className="text-xs"
-                          >
-                            {message.analysis.crisisLevel}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+                  >
+                    <motion.div
+                      className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                        message.sender === "user" ? "gradient-accent" : "gradient-primary",
+                      )}
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      {message.sender === "user" ? (
+                        <Heart className="w-4 h-4 text-white" />
+                      ) : (
+                        <Bot className="w-4 h-4 text-white" />
+                      )}
+                    </motion.div>
 
-            {/* Typing Indicator */}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-muted rounded-lg px-4 py-3 max-w-[80%]">
-                  <div className="flex items-center gap-1">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce"></div>
-                      <div
-                        className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
-                      ></div>
-                    </div>
-                    <span className="text-xs text-muted-foreground ml-2">AI is typing...</span>
+                    <motion.div
+                      className={cn(
+                        "rounded-2xl px-4 py-3 shadow-soft",
+                        message.sender === "user"
+                          ? "gradient-primary text-white rounded-br-md"
+                          : "bg-muted/50 backdrop-blur-sm rounded-bl-md",
+                      )}
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    >
+                      <p className="text-sm leading-relaxed">{message.content}</p>
+                      <div className="flex items-center justify-between mt-2 gap-2">
+                        <span
+                          className={cn(
+                            "text-xs",
+                            message.sender === "user" ? "text-white/70" : "text-muted-foreground",
+                          )}
+                        >
+                          {formatTime(message.timestamp)}
+                        </span>
+                        <div className="flex gap-1">
+                          {message.crisisAnalysis && message.crisisAnalysis.riskLevel !== "none" && (
+                            <Badge
+                              variant={
+                                message.crisisAnalysis.riskLevel === "high" ||
+                                message.crisisAnalysis.riskLevel === "critical"
+                                  ? "destructive"
+                                  : "secondary"
+                              }
+                              className="text-xs"
+                            >
+                              {message.crisisAnalysis.riskLevel} risk
+                            </Badge>
+                          )}
+                          {message.analysis && message.sender === "ai" && (
+                            <>
+                              {message.analysis.mood !== "neutral" && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {message.analysis.mood}
+                                </Badge>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
                   </div>
-                </div>
-              </div>
-            )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="flex justify-start"
+                >
+                  <div className="flex items-end gap-2">
+                    <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center">
+                      <Bot className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="bg-muted/50 backdrop-blur-sm rounded-2xl rounded-bl-md px-4 py-3 shadow-soft">
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          {[0, 1, 2].map((i) => (
+                            <motion.div
+                              key={i}
+                              className="w-2 h-2 bg-muted-foreground/50 rounded-full"
+                              animate={{ scale: [1, 1.5, 1] }}
+                              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, delay: i * 0.2 }}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-muted-foreground">AI is thinking...</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area */}
-          <div className="flex gap-2">
-            <Input
-              ref={inputRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Share what's on your mind..."
-              disabled={isLoading}
-              className="flex-1"
-            />
-            <Button onClick={handleSendMessage} disabled={!inputValue.trim() || isLoading} size="icon">
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Helper Text */}
-          <p className="text-xs text-muted-foreground mt-2 text-center">
-            This conversation is confidential. Your AI companion is here to listen and support you.
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card className="mt-4">
-        <CardContent className="pt-4">
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-3">
-              Need immediate support? These resources are available 24/7:
-            </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              <Button variant="outline" size="sm" asChild>
-                <a href="tel:9999666555">Vandrevala Foundation: 9999 666 555</a>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <a href="tel:08046110007">NIMHANS: 080-46110007</a>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <a href="tel:912227546669">Snehi: 91-22-27546669</a>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <a href="/crisis-support">More Resources</a>
-              </Button>
+          <motion.div className="space-y-3" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="flex gap-3">
+              <Input
+                ref={inputRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Share what's on your mind..."
+                disabled={isLoading}
+                className="flex-1 border-0 bg-muted/30 focus:bg-muted/50 rounded-2xl px-4 py-3 transition-colors"
+              />
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim() || isLoading}
+                  size="icon"
+                  className="gradient-primary text-white border-0 shadow-glow rounded-2xl w-12 h-12"
+                >
+                  <Send className="w-5 h-5" />
+                </Button>
+              </motion.div>
             </div>
-          </div>
+
+            <p className="text-xs text-muted-foreground text-center">
+              This conversation is confidential. Your AI companion is here to listen and support you.
+            </p>
+          </motion.div>
         </CardContent>
       </Card>
     </div>
