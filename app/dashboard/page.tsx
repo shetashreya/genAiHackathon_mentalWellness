@@ -491,9 +491,9 @@ export default function DashboardPage() {
 
               {/* Bottom Grid: Wellness Nudges & Growth */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="shadow-warm border-blue-400/20 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20">
+                <Card className="shadow-warm border-caramel/20 bg-gradient-to-br from-mocha/50 to-caramel/10">
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-base">
+                    <CardTitle className="flex items-center gap-2 text-caramel text-base">
                       <Droplets className="w-5 h-5" />
                       Water Intake
                     </CardTitle>
@@ -502,7 +502,12 @@ export default function DashboardPage() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">{waterIntake}/8 glasses</span>
-                        <Button onClick={handleWaterIntake} size="sm" variant="outline">
+                        <Button
+                          onClick={handleWaterIntake}
+                          size="sm"
+                          variant="outline"
+                          className="border-caramel/30 text-caramel hover:bg-caramel/10 bg-transparent"
+                        >
                           +1
                         </Button>
                       </div>
@@ -511,48 +516,61 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="shadow-warm border-green-400/20 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20">
+                <Card className="shadow-warm border-amber/20 bg-gradient-to-br from-mocha/50 to-amber/10">
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400 text-base">
+                    <CardTitle className="flex items-center gap-2 text-amber text-base">
                       <Stretch className="w-5 h-5" />
                       Posture Check
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-xs text-muted-foreground mb-2">Time for a stretch break?</p>
-                    <Button size="sm" variant="outline" className="w-full bg-transparent">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full border-amber/30 text-amber hover:bg-amber/10 bg-transparent"
+                    >
                       Stretch Now
                     </Button>
                   </CardContent>
                 </Card>
 
                 {showSleepRoutine && (
-                  <Card className="shadow-warm border-purple-400/20 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20">
+                  /* Updated Sleep Routine card to match dark brown theme */
+                  <Card className="shadow-warm border-gold/20 bg-gradient-to-br from-mocha/50 to-gold/10">
                     <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-purple-600 dark:text-purple-400 text-base">
+                      <CardTitle className="flex items-center gap-2 text-gold text-base">
                         <Moon className="w-5 h-5" />
                         Sleep Routine
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-xs text-muted-foreground mb-2">Ready for bedtime?</p>
-                      <Button size="sm" variant="outline" className="w-full bg-transparent">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full border-gold/30 text-gold hover:bg-gold/10 bg-transparent"
+                      >
                         Start Routine
                       </Button>
                     </CardContent>
                   </Card>
                 )}
 
-                <Card className="shadow-warm border-orange-400/20 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20">
+                <Card className="shadow-warm border-caramel/20 bg-gradient-to-br from-mocha/50 to-caramel/10">
                   <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-orange-600 dark:text-orange-400 text-base">
+                    <CardTitle className="flex items-center gap-2 text-caramel text-base">
                       <Target className="w-5 h-5" />
                       Growth Challenge
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-xs text-muted-foreground mb-2">{currentChallenge}</p>
-                    <Button size="sm" variant="outline" className="w-full bg-transparent">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full border-caramel/30 text-caramel hover:bg-caramel/10 bg-transparent"
+                    >
                       Join Challenge
                     </Button>
                   </CardContent>
