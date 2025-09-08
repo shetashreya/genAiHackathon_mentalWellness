@@ -29,6 +29,7 @@ import {
   Wind,
   Play,
   Pause,
+  User,
 } from "lucide-react"
 import type { WellnessResource } from "@/lib/resources"
 import { type UserProgress, type Achievement, updateProgress, getDefaultProgress } from "@/lib/gamification"
@@ -315,16 +316,26 @@ export default function DashboardPage() {
             whileHover={{ scale: 1.01 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-3xl flex items-center justify-center shadow-warm">
-                <Heart className="w-8 h-8 text-background" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-3xl flex items-center justify-center shadow-warm">
+                  <Heart className="w-8 h-8 text-background" />
+                </div>
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatDelay: 3 }}
+                >
+                  <Sparkles className="w-6 h-6 text-accent" />
+                </motion.div>
               </div>
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatDelay: 3 }}
+              <Button
+                onClick={() => router.push("/profile")}
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-full p-2"
               >
-                <Sparkles className="w-6 h-6 text-accent" />
-              </motion.div>
+                <User className="w-6 h-6" />
+              </Button>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-primary font-sans">
               Hi {user?.nickname}, how are you feeling today?
