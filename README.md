@@ -7,14 +7,10 @@
 
 ## Deployment
 
-Your project is live at:
+project is live at:
 
 **[https://vercel.com/shreya-shetas-projects/v0-youth-mental-wellness-tool](https://vercel.com/shreya-shetas-projects/v0-youth-mental-wellness-tool)**
 
-## Build your app
 
-Continue building your app on:
-
-**[https://v0.app/chat/projects/GMje9CIB9iK](https://v0.app/chat/projects/GMje9CIB9iK)**
 
 
